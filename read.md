@@ -10,6 +10,9 @@ A modular, enterprise-grade WordPress plugin framework for integrating external 
 ✅ **WooCommerce Integration** - Fetch products from local WooCommerce REST API  
 ✅ **External API Support** - Easily extend to connect Shopify, custom APIs, etc.  
 ✅ **Database Safety** - All queries use prepared statements to prevent SQL injection  
+✅ **Account Management** - Track user tiers (Free, Pro, Enterprise) and subscription status  
+✅ **Usage Tracking** - Monitor API usage limits and enforce tier-based restrictions  
+✅ **Pro Status Verification** - Check if users have active Pro subscriptions  
 
 ## Installation
 
@@ -36,7 +39,10 @@ integrated-commerce-toolkit/
 │   ├── class-main.php                 # Plugin initializer & orchestrator
 │   ├── class-api.php                  # External API & WooCommerce integration
 │   ├── class-db.php                   # Secure database operations
-│   └── class-security.php             # Input sanitization & CSRF protection
+│   ├── class-security.php             # Input sanitization & CSRF protection
+│   └── class-account.php              # Account & subscription management
+├── check-account-status.php           # CLI tool for checking account status
+├── account-status-demo.php            # Demo script showing account features
 └── README.md                          # This file
 ```
 
@@ -223,6 +229,36 @@ $db->update_sync_status(1, 'synced');
 ✅ **CSRF Protection** - Nonce verification available  
 ✅ **XSS Prevention** - All input sanitized  
 ✅ **Direct Access Prevention** - ABSPATH check in all files  
+
+## Account Tiers & Features
+
+The plugin supports three account tiers with different feature sets:
+
+### Free Tier
+- 100 API calls per month
+- Daily sync frequency
+- 1 external API connection
+- Standard support
+- Basic caching
+
+### Pro Tier
+- 1,000 API calls per month
+- Hourly sync frequency
+- 5 external API connections
+- Priority support
+- Advanced caching
+
+### Enterprise Tier
+- Unlimited API calls
+- Real-time sync frequency
+- Unlimited external API connections
+- Priority support
+- Advanced caching
+
+**To check your account status:**
+- Visit the **ICT Account** page in WordPress Admin
+- Use the `[ict_account_status]` shortcode on any page
+- Run `php check-account-status.php` from the plugin directory
 
 ## Troubleshooting
 
