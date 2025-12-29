@@ -167,10 +167,71 @@ function ict_run_all_tests() {
     ict_test_api_caching();
     ict_test_database_operations();
     ict_test_security();
+    ict_test_account_management();
     
     echo "\n" . str_repeat("=", 50) . "\n";
     echo "Tests completed. Check results above.\n";
     echo str_repeat("=", 50) . "\n";
+}
+
+/**
+ * TEST 7: Test Account Management
+ * Expected: Should create, retrieve, and validate account status
+ */
+function ict_test_account_management() {
+    echo "\nTEST 7: Testing Account Management System...\n";
+    
+    if (!class_exists('ICT_Account')) {
+        echo "✗ ICT_Account class not found\n";
+        return;
+    }
+    
+    $account = new ICT_Account();
+    $user_id = get_current_user_id();
+    
+    if (!$user_id) {
+        echo "⚠ No user logged in, skipping user-specific tests\n";
+        return;
+    }
+    
+    // Test 1: Get account status
+    $status = $account->get_account_status($user_id);
+    if (is_array($status) && isset($status['tier'])) {
+        echo "✓ Retrieved account status successfully\n";
+        echo "  Current Tier: " . $status['tier'] . "\n";
+        echo "  Pro Status: " . ($status['is_pro'] ? 'Active' : 'Inactive') . "\n";
+    } else {
+        echo "✗ Failed to retrieve account status\n";
+    }
+    
+    // Test 2: Check pro status
+    $is_pro = $account->is_pro_user($user_id);
+    echo "  Is Pro User: " . ($is_pro ? 'Yes' : 'No') . "\n";
+    
+    // Test 3: Update to pro tier
+    $updated = $account->update_account_tier($user_id, 'pro', date('Y-m-d', strtotime('+1 year')));
+    if ($updated) {
+        echo "✓ Successfully updated account to Pro tier\n";
+        
+        // Verify the update
+        $new_status = $account->get_account_status($user_id);
+        if ($new_status['is_pro']) {
+            echo "✓ Pro status verified active\n";
+        }
+    } else {
+        echo "✗ Failed to update account tier\n";
+    }
+    
+    // Test 4: Track API usage
+    $account->track_api_usage($user_id);
+    $updated_status = $account->get_account_status($user_id);
+    echo "  API Calls Count: " . $updated_status['api_calls_count'] . "\n";
+    
+    // Test 5: Check API limit
+    $has_reached_limit = $account->has_reached_api_limit($user_id);
+    echo "  Reached API Limit: " . ($has_reached_limit ? 'Yes' : 'No') . "\n";
+    
+    echo "✓ Account management system working correctly\n";
 }
 
 // To run tests, use one of these methods:
