@@ -75,7 +75,51 @@ integrated-commerce-toolkit/
 - `secure_input($data)` - Sanitize text input
 - `check_nonce($action, $query_arg)` - Verify nonce for CSRF protection
 
+### 5. **ICT_Account** (Account & Subscription Management)
+- User account tier management (Free, Pro, Enterprise)
+- Pro subscription status tracking
+- API usage limits and monitoring
+- Feature access control based on tier
+
+**Methods:**
+- `get_account_status($user_id)` - Get complete account status
+- `is_pro_user($user_id)` - Check if user has active pro access
+- `get_tier_features($tier)` - Get features for a specific tier
+- `update_account_tier($user_id, $tier, $expiry_date)` - Update account tier
+- `track_api_usage($user_id)` - Track API call usage
+- `has_reached_api_limit($user_id)` - Check if API limit reached
+- `reset_api_usage($user_id)` - Reset monthly usage counter
+
 ## Quick Start
+
+### Check Your Account Status
+
+**Method 1: Admin Dashboard**
+1. Log into WordPress Admin
+2. Go to **ICT Account** in the sidebar menu
+3. View your account tier, pro status, and usage statistics
+
+**Method 2: Shortcode (Frontend)**
+Add this shortcode to any page or post:
+```
+[ict_account_status]
+```
+
+**Method 3: CLI Script**
+```bash
+php check-account-status.php [user_id]
+```
+
+**Method 4: Programmatically**
+```php
+$account = new ICT_Account();
+$status = $account->get_account_status();
+
+// Check if user has pro access
+if ($account->is_pro_user()) {
+    echo "You have Pro access!";
+}
+```
 
 ### Activate the Plugin
 1. Go to WordPress Admin → Plugins
@@ -96,6 +140,36 @@ $api->clear_all_caches();
 ```
 
 ## Testing Guide
+
+### Account Management Testing
+
+**Check Account Status:**
+```php
+$account = new ICT_Account();
+$status = $account->get_account_status();
+print_r($status);
+```
+
+**Upgrade to Pro:**
+```php
+$account = new ICT_Account();
+$user_id = get_current_user_id();
+$account->update_account_tier($user_id, 'pro', date('Y-m-d', strtotime('+1 year')));
+```
+
+**Track API Usage:**
+```php
+$account = new ICT_Account();
+$account->track_api_usage();
+```
+
+**Check if API Limit Reached:**
+```php
+$account = new ICT_Account();
+if ($account->has_reached_api_limit()) {
+    echo "API limit reached!";
+}
+```
 
 ### 1. Enable Debug Logging
 Add to `wp-config.php`:
