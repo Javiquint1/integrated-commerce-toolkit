@@ -78,7 +78,7 @@ class ICT_Account {
 
             // Check if expiry date is in the future
             $expiry_timestamp = strtotime($expiry_date);
-            if ($expiry_timestamp > current_time('timestamp')) {
+            if ($expiry_timestamp !== false && $expiry_timestamp > current_time('timestamp')) {
                 return true;
             }
         }
@@ -195,16 +195,16 @@ class ICT_Account {
      * Reset monthly API usage counter (should be called by cron)
      * 
      * @param int $user_id User ID (if null, resets for all users)
-     * @return void
+     * @return bool Success status
      */
     public function reset_api_usage($user_id = null) {
         if ($user_id) {
             $user_id = absint($user_id);
-            update_user_meta($user_id, '_ict_api_calls_count', 0);
+            return update_user_meta($user_id, '_ict_api_calls_count', 0);
         } else {
             // Reset for all users
             global $wpdb;
-            $wpdb->query(
+            $result = $wpdb->query(
                 $wpdb->prepare(
                     "UPDATE {$wpdb->usermeta} 
                      SET meta_value = %s 
@@ -213,6 +213,13 @@ class ICT_Account {
                     '_ict_api_calls_count'
                 )
             );
+            
+            if ($result === false) {
+                error_log('ICT: Failed to reset API usage counters');
+                return false;
+            }
+            
+            return true;
         }
     }
 }

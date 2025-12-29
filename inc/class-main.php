@@ -5,6 +5,7 @@ class ICT_Main {
         add_action('init', array($this, 'run_sync_logic'));
         add_action('init', array($this, 'register_shortcodes'));
         add_action('admin_menu', array($this, 'add_account_status_page'));
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_account_status_styles'));
     }
 
     private function load_dependencies() {
@@ -44,57 +45,72 @@ class ICT_Main {
      */
     public function account_status_shortcode($atts) {
         if (!is_user_logged_in()) {
-            return '<p>' . __('Please log in to view your account status.', 'integrated-commerce-toolkit') . '</p>';
+            return '<p>' . esc_html__('Please log in to view your account status.', 'integrated-commerce-toolkit') . '</p>';
         }
 
         $account = new ICT_Account();
         $status = $account->get_account_status();
 
+        $pro_status_html = $status['is_pro'] 
+            ? '<span class="ict-status-active">' . esc_html__('Active', 'integrated-commerce-toolkit') . '</span>' 
+            : '<span class="ict-status-inactive">' . esc_html__('Inactive', 'integrated-commerce-toolkit') . '</span>';
+
         ob_start();
         ?>
         <div class="ict-account-status">
-            <h3><?php _e('Account Status', 'integrated-commerce-toolkit'); ?></h3>
+            <h3><?php esc_html_e('Account Status', 'integrated-commerce-toolkit'); ?></h3>
             <table class="ict-status-table">
                 <tr>
-                    <th><?php _e('Account Tier:', 'integrated-commerce-toolkit'); ?></th>
+                    <th><?php esc_html_e('Account Tier:', 'integrated-commerce-toolkit'); ?></th>
                     <td><strong><?php echo esc_html(ucfirst($status['tier'])); ?></strong></td>
                 </tr>
                 <tr>
-                    <th><?php _e('Pro Status:', 'integrated-commerce-toolkit'); ?></th>
-                    <td><?php echo $status['is_pro'] ? '<span style="color: green;">✓ Active</span>' : '<span style="color: red;">✗ Inactive</span>'; ?></td>
+                    <th><?php esc_html_e('Pro Status:', 'integrated-commerce-toolkit'); ?></th>
+                    <td><?php echo wp_kses_post($pro_status_html); ?></td>
                 </tr>
                 <?php if (!empty($status['expiry_date'])): ?>
                 <tr>
-                    <th><?php _e('Expires:', 'integrated-commerce-toolkit'); ?></th>
+                    <th><?php esc_html_e('Expires:', 'integrated-commerce-toolkit'); ?></th>
                     <td><?php echo esc_html($status['expiry_date']); ?></td>
                 </tr>
                 <?php endif; ?>
                 <tr>
-                    <th><?php _e('API Calls Used:', 'integrated-commerce-toolkit'); ?></th>
+                    <th><?php esc_html_e('API Calls Used:', 'integrated-commerce-toolkit'); ?></th>
                     <td><?php echo esc_html($status['api_calls_count']); ?> / <?php echo esc_html($status['features']['api_calls_limit']); ?></td>
                 </tr>
                 <tr>
-                    <th><?php _e('Last Sync:', 'integrated-commerce-toolkit'); ?></th>
-                    <td><?php echo $status['last_sync'] ? esc_html($status['last_sync']) : __('Never', 'integrated-commerce-toolkit'); ?></td>
+                    <th><?php esc_html_e('Last Sync:', 'integrated-commerce-toolkit'); ?></th>
+                    <td><?php echo $status['last_sync'] ? esc_html($status['last_sync']) : esc_html__('Never', 'integrated-commerce-toolkit'); ?></td>
                 </tr>
             </table>
-            <h4><?php _e('Available Features:', 'integrated-commerce-toolkit'); ?></h4>
+            <h4><?php esc_html_e('Available Features:', 'integrated-commerce-toolkit'); ?></h4>
             <ul class="ict-features-list">
-                <li><?php printf(__('Sync Frequency: %s', 'integrated-commerce-toolkit'), esc_html($status['features']['sync_frequency'])); ?></li>
-                <li><?php printf(__('External APIs: %s', 'integrated-commerce-toolkit'), esc_html($status['features']['external_apis'])); ?></li>
-                <li><?php printf(__('Priority Support: %s', 'integrated-commerce-toolkit'), $status['features']['priority_support'] ? __('Yes', 'integrated-commerce-toolkit') : __('No', 'integrated-commerce-toolkit')); ?></li>
-                <li><?php printf(__('Advanced Caching: %s', 'integrated-commerce-toolkit'), $status['features']['advanced_caching'] ? __('Yes', 'integrated-commerce-toolkit') : __('No', 'integrated-commerce-toolkit')); ?></li>
+                <li><?php printf(esc_html__('Sync Frequency: %s', 'integrated-commerce-toolkit'), esc_html($status['features']['sync_frequency'])); ?></li>
+                <li><?php printf(esc_html__('External APIs: %s', 'integrated-commerce-toolkit'), esc_html($status['features']['external_apis'])); ?></li>
+                <li><?php printf(esc_html__('Priority Support: %s', 'integrated-commerce-toolkit'), $status['features']['priority_support'] ? esc_html__('Yes', 'integrated-commerce-toolkit') : esc_html__('No', 'integrated-commerce-toolkit')); ?></li>
+                <li><?php printf(esc_html__('Advanced Caching: %s', 'integrated-commerce-toolkit'), $status['features']['advanced_caching'] ? esc_html__('Yes', 'integrated-commerce-toolkit') : esc_html__('No', 'integrated-commerce-toolkit')); ?></li>
             </ul>
         </div>
-        <style>
-            .ict-account-status { padding: 20px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; }
-            .ict-status-table { width: 100%; margin: 15px 0; }
-            .ict-status-table th { text-align: left; padding: 8px; width: 40%; }
-            .ict-status-table td { padding: 8px; }
-            .ict-features-list { list-style: disc; margin-left: 20px; }
-        </style>
         <?php
         return ob_get_clean();
+    }
+
+    /**
+     * Enqueue styles for account status shortcode
+     */
+    public function enqueue_account_status_styles() {
+        if (!is_admin() && has_shortcode(get_post()->post_content ?? '', 'ict_account_status')) {
+            $custom_css = "
+                .ict-account-status { padding: 20px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; }
+                .ict-status-table { width: 100%; margin: 15px 0; }
+                .ict-status-table th { text-align: left; padding: 8px; width: 40%; }
+                .ict-status-table td { padding: 8px; }
+                .ict-features-list { list-style: disc; margin-left: 20px; }
+                .ict-status-active { color: green; font-weight: bold; }
+                .ict-status-inactive { color: red; }
+            ";
+            wp_add_inline_style('wp-block-library', $custom_css);
+        }
     }
 
     /**

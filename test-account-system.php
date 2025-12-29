@@ -42,8 +42,10 @@ if (!function_exists('get_user_meta')) {
         return strip_tags(trim($value));
     }
     
-    // Define ABSPATH for the class
-    define('ABSPATH', true);
+    // Define ABSPATH for the class (use file directory as base path)
+    if (!defined('ABSPATH')) {
+        define('ABSPATH', dirname(__FILE__) . '/');
+    }
 }
 
 // Load the ICT_Account class
